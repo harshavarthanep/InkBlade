@@ -1,21 +1,24 @@
-const CACHE_NAME = 'ink-blade-v1';
-const ASSETS_TO_CACHE = [
-  './',
-  './index.html',
-  './manifest.json',
-  // Add your local icon paths here if you have them, e.g., './icon-192.png'
-];
+const CACHE_NAME = 'ink-blade-v3'; // Bumped version to force phone to update
 
-// Install Event
+// Install Event - Bulletproof version
 self.addEventListener('install', (event) => {
+  self.skipWaiting(); // Forces the browser to activate this immediately
+  
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
+      // Removed the risky './' which breaks on GitHub Pages
+      return cache.addAll([
+        'index.html',
+        'manifest.json',
+        'icon-192.png',
+        'icon-512.png'
+      ]).catch(err => console.log("Cache error bypassed:", err)); 
+      // ^ This catch prevents the SW from crashing if a file path is weird
     })
   );
 });
 
-// Fetch Event (Offline Capability)
+// Fetch Event - Required for PWA installability
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((response) => {
