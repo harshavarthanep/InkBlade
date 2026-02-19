@@ -178,11 +178,62 @@
         <button class="secondary" onclick="showHome()">MENU</button>
     </div>
 
-    <script type="module">
+    <!-- <script type="module">
         // Paste Firebase Configuration Here Later
         window.saveScoreToCloud = function(score) {
             console.log("Firebase not configured yet. Score:", score);
         };
+    </script> -->
+
+    <script type="module">
+      // Import the functions you need from the SDKs you need
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+      import { getFirestore, collection, addDoc, serverTimestamp } 
+        from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+      import { getAuth, signInAnonymously } 
+        from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    
+      // TODO: Replace with your actual project config
+      const firebaseConfig = {
+          apiKey: "AIzaSyBXPG13z_eLyS__djctLi4i3VkEjGolL28",
+          authDomain: "inkbladebyh24creationz.firebaseapp.com",
+          projectId: "inkbladebyh24creationz",
+          storageBucket: "inkbladebyh24creationz.firebasestorage.app",
+          messagingSenderId: "1008887341044",
+          appId: "1:1008887341044:web:0ce9a5057ec1b89933e3a1
+      };
+    
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      const auth = getAuth(app);
+    
+      // Sign in anonymously so user doesn't need to login
+      signInAnonymously(auth)
+        .then(() => {
+          console.log("Connected to Cloud Storage anonymously.");
+        })
+        .catch((error) => {
+          console.error("Cloud Error:", error);
+        });
+    
+      // This function is called by the Game Over screen
+      window.saveScoreToCloud = async function(score) {
+        const user = auth.currentUser;
+        if (user) {
+          try {
+            await addDoc(collection(db, "leaderboard"), {
+              uid: user.uid,
+              score: score,
+              game: "InkAndBlade",
+              date: serverTimestamp()
+            });
+            console.log("Score saved to cloud!");
+          } catch (e) {
+            console.error("Error adding score: ", e);
+          }
+        }
+      };
     </script>
 
     <script>
