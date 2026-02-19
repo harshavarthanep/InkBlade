@@ -751,7 +751,10 @@
                 deferredPrompt.userChoice.then((choiceResult) => {
                     if (choiceResult.outcome === 'accepted') {
                         console.log('User installed the game');
-                        menuInstallBtn.classList.add('hidden'); // Hide button after install
+                        menuInstallBtn.classList.add('hidden'); // Hide after successful install
+                    } else {
+                        console.log('User dismissed the install prompt');
+                        menuInstallBtn.classList.add('hidden'); // Hide if they cancel, so it's not sitting there broken
                     }
                     deferredPrompt = null;
                 });
