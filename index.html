@@ -149,6 +149,67 @@
 
         @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
 
+        /* ... keep your existing styles ... */
+
+        /* INSTALL POPUP STYLES */
+        #install-modal {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 400px;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            border: 2px solid var(--ink-color);
+            text-align: center;
+            z-index: 1000;
+            display: none; /* Hidden by default */
+            font-family: var(--ui-font);
+        }
+        
+        #install-modal h3 {
+            margin-top: 0;
+            color: var(--hero-color);
+        }
+        
+        #install-btn {
+            background: var(--hero-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+        }
+        
+        #close-install {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        /* iOS Specific Instructions */
+        .ios-instructions {
+            font-size: 0.9rem;
+            color: #555;
+            margin-top: 10px;
+        }
+        .ios-icon {
+            display: inline-block;
+            vertical-align: middle;
+            width: 20px;
+            height: 20px;
+            background: #eee;
+            border-radius: 4px;
+            margin: 0 2px;
+        }
+
     </style>
 </head>
 <body>
@@ -622,5 +683,81 @@
         window.addEventListener('touchend', endInput);
 
     </script>
+    <!-- //New code -->
+
+    <div id="install-modal">
+        <span id="close-install" onclick="closeInstallModal()">X</span>
+        <h3>INSTALL APP</h3>
+        <p>Install Ink & Blade for the best full-screen experience.</p>
+        
+        <button id="install-btn" class="hidden">INSTALL NOW</button>
+    
+        <div id="ios-prompt" class="hidden ios-instructions">
+            To install on iPhone:<br>
+            1. Tap the <strong>Share</strong> button <span style="font-size:1.2rem">⎋</span><br>
+            2. Scroll down & tap <strong>Add to Home Screen</strong> ➕
+        </div>
+    </div>
+    
+    <script>
+        // --- PWA INSTALL LOGIC ---
+        let deferredPrompt;
+        const installModal = document.getElementById('install-modal');
+        const installBtn = document.getElementById('install-btn');
+        const iosPrompt = document.getElementById('ios-prompt');
+    
+        // 1. Register Service Worker (REQUIRED for PWA)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('SW registration failed: ', err));
+            });
+        }
+    
+        // 2. Detect iOS
+        const isIos = () => {
+            const userAgent = window.navigator.userAgent.toLowerCase();
+            return /iphone|ipad|ipod/.test(userAgent);
+        }
+        const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
+    
+        // 3. Handle Android/Desktop "BeforeInstallPrompt"
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent Chrome 67 and earlier from automatically showing the prompt
+            e.preventDefault();
+            // Stash the event so it can be triggered later.
+            deferredPrompt = e;
+            
+            // Show our custom modal
+            installModal.style.display = 'block';
+            installBtn.classList.remove('hidden');
+            
+            // Handle Button Click
+            installBtn.addEventListener('click', (e) => {
+                installModal.style.display = 'none';
+                deferredPrompt.prompt(); // Trigger the actual system popup
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    }
+                    deferredPrompt = null;
+                });
+            });
+        });
+    
+        // 4. Handle iOS (Show instructions)
+        if (isIos() && !isInStandaloneMode()) {
+            // Show modal strictly for iOS
+            installModal.style.display = 'block';
+            installBtn.classList.add('hidden'); // Hide the button (doesn't work on iOS)
+            iosPrompt.classList.remove('hidden'); // Show instructions
+        }
+    
+        function closeInstallModal() {
+            installModal.style.display = 'none';
+        }
+    </script>  
+    
 </body>
 </html>
