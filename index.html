@@ -228,6 +228,9 @@
         <h1>INK & BLADE</h1>
         <p>Tactical Action. <br>Drag to aim. Release to slash. <br>Kill the Ink Blots.</p>
         <button onclick="startGame()">PLAY</button>
+
+        <button id="menu-install-btn" class="hidden" style="background: #e63946;">INSTALL GAME</button>
+        
         <p style="font-size: 0.8rem; margin-top: 20px;">v1.0.0 | H24 Creationz</p>
     </div>
 
@@ -722,29 +725,38 @@
         }
         const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
     
+        const menuInstallBtn = document.getElementById('menu-install-btn');
+
         // 3. Handle Android/Desktop "BeforeInstallPrompt"
         window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevent Chrome 67 and earlier from automatically showing the prompt
+            // Prevent default browser popup
             e.preventDefault();
-            // Stash the event so it can be triggered later.
             deferredPrompt = e;
             
-            // Show our custom modal
+            // Show both the custom modal AND the new menu button
             installModal.style.display = 'block';
             installBtn.classList.remove('hidden');
+            menuInstallBtn.classList.remove('hidden');
             
-            // Handle Button Click
-            installBtn.addEventListener('click', (e) => {
-                installModal.style.display = 'none';
-                deferredPrompt.prompt(); // Trigger the actual system popup
+            // Logic for the popup button
+            installBtn.addEventListener('click', triggerInstall);
+            // Logic for the main menu button
+            menuInstallBtn.addEventListener('click', triggerInstall);
+        });
+        
+        function triggerInstall() {
+            installModal.style.display = 'none';
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
                 deferredPrompt.userChoice.then((choiceResult) => {
                     if (choiceResult.outcome === 'accepted') {
-                        console.log('User accepted the install prompt');
+                        console.log('User installed the game');
+                        menuInstallBtn.classList.add('hidden'); // Hide button after install
                     }
                     deferredPrompt = null;
                 });
-            });
-        });
+            }
+        }
     
         // 4. Handle iOS (Show instructions)
         if (isIos() && !isInStandaloneMode()) {
